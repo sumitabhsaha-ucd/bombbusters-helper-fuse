@@ -47,6 +47,11 @@ label.f{display:block;font-weight:800;font-size:13px;margin:10px 0 4px;color:var
 .btn:disabled{opacity:.35;cursor:not-allowed}
 .seg{display:flex;gap:6px;flex-wrap:wrap}
 .seg .btn{flex:1;min-width:64px}
+/* even grid for option buttons, so long labels never clip */
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.opts .btn{width:100%;min-height:52px;padding:8px 10px;line-height:1.2;font-size:14px;white-space:normal;overflow-wrap:break-word;text-align:center;display:flex;align-items:center;justify-content:center}
+.opts.who{grid-template-columns:repeat(auto-fill,minmax(84px,1fr))}
+.opts.who .btn{min-height:44px}
 .hidden{display:none!important}
 
 /* live bar */
@@ -99,7 +104,7 @@ table.s td,table.s th{border-bottom:1px solid var(--line);padding:6px 4px;text-a
 <body>
 <div class="wrap">
   <div class="top">
-    <h1>Black <b>Box</b></h1>
+    <h1 id="logo" role="button" tabindex="0" title="Go to home" style="cursor:pointer">Black <b>Box</b></h1>
     <span class="muted small">Bomb Busters session tracker</span>
     <span class="sp"></span>
     <span class="pill saved" id="savedPill">● Saved on this device</span>
@@ -107,6 +112,7 @@ table.s td,table.s th{border-bottom:1px solid var(--line);padding:6px 4px;text-a
 
   <!-- ===== HOME ===== -->
   <section id="v-home">
+    <div class="card hidden" id="resumeCard" style="border-color:var(--yellow)"></div>
     <div class="card">
       <h2>New session</h2>
       <p class="muted small" style="margin:0">One session = one sitting with one group. You can log several missions and retries inside it.</p>
@@ -186,7 +192,7 @@ table.s td,table.s th{border-bottom:1px solid var(--line);padding:6px 4px;text-a
     <div class="card hidden" id="detCard">
       <div class="row"><h2 id="detTitle">Dual Cut</h2><span class="sp" style="flex:1"></span><button class="btn sm ghost" id="cancelAct">Cancel</button></div>
 
-      <div id="dTarget"><label class="f">Target teammate</label><div class="seg" id="targetSeg"></div></div>
+      <div id="dTarget"><label class="f">Target teammate</label><div class="opts who" id="targetSeg"></div></div>
       <div id="dValue"><label class="f" id="valLabel">Value called</label><div class="vals" id="valGrid"></div></div>
       <div id="dDD" class="row" style="margin-top:10px">
         <button class="btn sm" id="ddBtn">Double Detector: No</button>
@@ -249,7 +255,7 @@ table.s td,table.s th{border-bottom:1px solid var(--line);padding:6px 4px;text-a
 <div class="modal-bg" id="endModal"><div class="modal">
   <h2>End mission</h2>
   <label class="f">Outcome</label>
-  <div class="seg" id="outSeg">
+  <div class="opts" id="outSeg">
     <button class="btn" data-out="Win">🏆 Win</button>
     <button class="btn" data-out="Loss: red wire">💥 Red wire</button>
     <button class="btn" data-out="Loss: dial">☠️ Dial</button>
@@ -282,10 +288,10 @@ table.s td,table.s th{border-bottom:1px solid var(--line);padding:6px 4px;text-a
 <!-- equipment modal -->
 <div class="modal-bg" id="equipModal"><div class="modal">
   <h2>Equipment used</h2>
-  <label class="f">By</label><div class="seg" id="eqWho"></div>
+  <label class="f">By</label><div class="opts who" id="eqWho"></div>
   <label class="f">Which card</label>
-  <div class="seg" id="eqWhich"></div>
-  <input class="in" id="eqOther" placeholder="Other card name" style="margin-top:8px">
+  <div class="opts" id="eqWhich"></div>
+  <input class="in hidden" id="eqOther" placeholder="Type the card name" style="margin-top:8px">
   <div class="row" style="margin-top:14px"><button class="btn ghost" id="eqCancel">Cancel</button><span style="flex:1"></span><button class="btn primary" id="eqSave">Log it</button></div>
 </div></div>
 
@@ -315,7 +321,7 @@ const nowISO = () => new Date().toISOString();
 const fmt = sec => { sec=Math.max(0,Math.round(sec)); const m=Math.floor(sec/60), s=sec%60; return m+":"+String(s).padStart(2,"0"); };
 const localTime = iso => new Date(iso).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
 function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),1600); }
-function confirmBox(title,text){ return new Promise(res=>{ $("cfTitle").textContent=title; $("cfText").textContent=text; $("confirmModal").classList.add("open");
+function confirmBox(title,text,yes="Yes",no="Cancel"){ return new Promise(res=>{ $("cfTitle").textContent=title; $("cfText").textContent=text; $("cfYes").textContent=yes; $("cfNo").textContent=no; $("confirmModal").classList.add("open");
   $("cfYes").onclick=()=>{ $("confirmModal").classList.remove("open"); res(true); }; $("cfNo").onclick=()=>{ $("confirmModal").classList.remove("open"); res(false); }; }); }
 
 const TAGS = [
@@ -391,7 +397,7 @@ $("startMission").onclick=()=>{
 
 /* ================= LIVE ================= */
 function show(v){ ["home","mission","live"].forEach(x=>$("v-"+x).classList.toggle("hidden",x!==v)); window.scrollTo(0,0);
-  if(v==="home"){ renderCountSeg(); renderSessions(); clearInterval(tickTimer); } }
+  if(v==="home"){ renderCountSeg(); renderSessions(); renderResume(); clearInterval(tickTimer); } }
 document.addEventListener("click",e=>{ const n=e.target.closest("[data-nav]"); if(n) show(n.dataset.nav); });
 
 const pname = id => (S.players.find(p=>p.id===id)||{}).name || id;
@@ -479,7 +485,7 @@ $("actCard").onclick=e=>{
   $("dValue").classList.toggle("hidden",red); $("dCount").classList.toggle("hidden",dual); $("dSave").classList.toggle("hidden",dual);
   $("valLabel").textContent = dual ? "Value called" : "Value cut";
   $("ddBtn").textContent="Double Detector: No"; $("ddBtn").classList.remove("sel");
-  $("targetSeg").innerHTML=S.players.filter(p=>p.id!==draft.player).map(p=>`<button class="btn sm" data-t="${p.id}">${esc(p.name)}</button>`).join("");
+  $("targetSeg").innerHTML=S.players.filter(p=>p.id!==draft.player).map(p=>`<button class="btn" data-t="${p.id}">${esc(p.name)}</button>`).join("");
   $("valGrid").innerHTML=[...Array.from({length:12},(_,i)=>i+1),"Yellow"].map(v=>`<button class="btn ${v==="Yellow"?"y":""}" data-v="${v}">${v==="Yellow"?"YEL":v}</button>`).join("");
   const counts = red ? [1,2,3,4] : [2,4];
   $("countSegLive").innerHTML=counts.map(c=>`<button class="btn sm" data-c="${c}">${c}</button>`).join("");
@@ -549,12 +555,12 @@ $("obsNote").addEventListener("keydown",e=>{ if(e.key==="Enter" && e.target.valu
 let eq={who:"",which:""};
 $("equipBtn").onclick=()=>{
   eq={who:M.current,which:""};
-  $("eqWho").innerHTML=S.players.map(p=>`<button class="btn sm ${p.id===eq.who?"sel":""}" data-w="${p.id}">${esc(p.name)}</button>`).join("");
-  $("eqWhich").innerHTML=EQUIP.map(x=>`<button class="btn sm" data-q="${esc(x)}">${esc(x)}</button>`).join("");
-  $("eqOther").value=""; $("equipModal").classList.add("open");
+  $("eqWho").innerHTML=S.players.map(p=>`<button class="btn ${p.id===eq.who?"sel":""}" data-w="${p.id}">${esc(p.name)}</button>`).join("");
+  $("eqWhich").innerHTML=EQUIP.map(x=>`<button class="btn" data-q="${esc(x)}">${esc(x)}</button>`).join("");
+  $("eqOther").value=""; $("eqOther").classList.add("hidden"); $("equipModal").classList.add("open");
 };
 pick($("eqWho"),"data-w",v=>eq.who=v);
-pick($("eqWhich"),"data-q",v=>eq.which=v);
+pick($("eqWhich"),"data-q",v=>{ eq.which=v; $("eqOther").classList.toggle("hidden",v!=="Other"); if(v==="Other") $("eqOther").focus(); });
 $("eqCancel").onclick=()=>$("equipModal").classList.remove("open");
 $("eqSave").onclick=()=>{ let w=eq.which==="Other"||!eq.which ? ($("eqOther").value.trim()||eq.which) : eq.which; if(!w){ toast("Pick a card"); return; }
   logEvent("Equipment",w,eq.who,""); $("equipModal").classList.remove("open"); toast("Equipment logged"); };
@@ -600,7 +606,21 @@ $("retryBtn").onclick=()=>{ $("nextModal").classList.remove("open"); const i=S.p
 $("nextMissionBtn").onclick=()=>{ $("nextModal").classList.remove("open"); const i=S.players.findIndex(p=>p.id===M.captain); goMissionSetup({mission:M.mission+1,captain:S.players[(i+1)%S.players.length].id}); };
 $("exportSessBtn").onclick=()=>exportXlsx([S], S.id);
 $("doneBtn").onclick=()=>{ $("nextModal").classList.remove("open"); M=null; show("home"); };
-$("toSessions").onclick=()=>{ M=null; show("home"); };
+const recording = () => !!(M && !M.endedAt && !$("v-live").classList.contains("hidden"));
+async function leaveToHome(){
+  if(recording()){
+    const ok = await confirmBox("Leave this mission?",
+      `Mission ${M.mission} is still being recorded. If you leave, everything logged so far stays saved and the timer pauses. You can resume it any time from the home page.`,
+      "Leave & pause", "Stay in session");
+    if(!ok) return;
+    if(!M.pauseStart){ M.pauseStart=nowISO(); logEvent("Status","Paused (left recording)","Team",""); }
+    save();
+  }
+  M=null; show("home");
+}
+$("toSessions").onclick=leaveToHome;
+$("logo").onclick=leaveToHome;
+$("logo").addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); leaveToHome(); } });
 
 /* ================= EXPORT ================= */
 function exportXlsx(sessions, label){
@@ -752,13 +772,25 @@ function tagMeaning(t){ return ({
   "Rules mistake (played wrong)":"A rule was applied incorrectly (note what happened)."
 })[t]||""; }
 
+/* resume an unfinished mission (also covers phones that skip the refresh warning) */
+function openMissions(){ const out=[]; DB.sessions.forEach(s=>s.missions.forEach(m=>{ if(!m.endedAt) out.push({s,m}); })); return out; }
+function renderResume(){
+  const list=openMissions(), card=$("resumeCard");
+  if(!list.length){ card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+  card.innerHTML=`<h2>⏸ Unfinished recording</h2>`+list.map(({s,m},i)=>`<div class="row" style="margin-top:8px"><div style="flex:1"><b>${esc(s.id)} · Mission ${m.mission} (try ${m.attempt})</b><br><span class="muted small">${m.turns.length} turns logged · ${esc(s.group||"")}</span></div><button class="btn primary" data-resume="${i}">Resume</button></div>`).join("");
+}
+$("resumeCard").onclick=e=>{ const b=e.target.closest("[data-resume]"); if(!b) return; const {s,m}=openMissions()[+b.dataset.resume]; S=s; M=m; goLive(); if(M.pauseStart) toast("Paused. Tap Resume to restart the timer"); };
+
 /* backup / restore */
 $("exportAll").onclick=()=>{ if(!DB.sessions.length){ toast("No sessions yet"); return; } exportXlsx(DB.sessions,"all"); };
 $("backupJson").onclick=()=>{ const b=new Blob([JSON.stringify(DB,null,1)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=`BlackBox_backup_${new Date().toISOString().slice(0,10)}.json`; a.click(); };
 $("restoreJson").onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const d=JSON.parse(await f.text()); if(!Array.isArray(d.sessions)) throw 0;
   const ids=new Set(DB.sessions.map(s=>s.id)); d.sessions.forEach(s=>{ if(!ids.has(s.id)) DB.sessions.push(s); }); save(); renderSessions(); toast("Backup restored"); }catch{ toast("That file isn't a Black Box backup"); } e.target.value=""; };
 
-window.addEventListener("beforeunload",e=>{ if(M && !M.endedAt){ save(); } });
+window.addEventListener("beforeunload",e=>{
+  if(M && !M.endedAt){ save(); e.preventDefault(); e.returnValue=""; return ""; } // browser shows its own "Leave site?" dialog
+});
 
 /* boot */
 renderCountSeg(); renderSessions(); show("home");
