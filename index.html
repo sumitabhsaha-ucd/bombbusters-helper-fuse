@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bomb Busters Squad Helper</title>
+<meta name="description" content="Learn Bomb Busters in 3 minutes and ask the rules helper anything at the table.">
+<meta property="og:title" content="Bomb Busters Squad Helper">
+<meta property="og:description" content="Quick onboarding and a rules helper for the co-op game Bomb Busters.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='30' cy='38' r='22' fill='%23222'/%3E%3Crect x='24' y='12' width='12' height='8' rx='2' fill='%23444'/%3E%3Cpath d='M30 12 Q34 2 46 6' stroke='%23a67c52' stroke-width='3' fill='none'/%3E%3Ccircle cx='48' cy='6' r='5' fill='%23ffb400'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f3f1ec; --ink:#141414; --ink2:#3a3a3a; --muted:#6b6b6b;
+  --red:#e3342b; --red-d:#b8231c; --blue:#2f8be0; --yellow:#f6c21a; --orange:#f26a1f;
+  --green:#3fbf68; --purple:#7a5be0; --tile:#1b1b1d; --card:#ffffff; --line:#d9d5cc;
+  --shadow:0 3px 0 #141414; --display:"Lilita One","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif; --radius:16px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  font-family:"Nunito",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  color:var(--ink); background:var(--paper);
+  background-image:radial-gradient(rgba(0,0,0,.07) 1px, transparent 1.4px);
+  background-size:9px 9px; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.display,.label-tag,.brand,.who,.name-form label,.boom,table.stands th,footer .sig{font-family:"Lilita One","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif}
+h1,h2,h3,.display{font-weight:400;letter-spacing:.3px;margin:0}
+button{font:inherit;cursor:pointer}
+.app{max-width:760px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding:14px 14px 0}
+.screen{display:none;flex:1;flex-direction:column;animation:pop .35s ease}
+.screen.active{display:flex}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:20px}
+.brand .mini-bomb{width:30px;height:30px}
+.brand b{color:var(--red)}
+.top-actions{display:flex;gap:6px;flex-wrap:nowrap;justify-content:flex-end}
+.chip-btn{background:#fff;border:2px solid var(--ink);border-radius:999px;padding:6px 12px;font-weight:800;font-size:13px;box-shadow:0 2px 0 var(--ink);transition:transform .1s}
+.chip-btn:active{transform:translateY(2px);box-shadow:none}
+
+/* panels */
+.panel{background:var(--card);border:3px solid var(--ink);border-radius:var(--radius);box-shadow:5px 5px 0 var(--ink);padding:20px;position:relative}
+.label-tag{display:inline-block;background:var(--ink);color:#fff;font-family:var(--display);padding:4px 12px;border-radius:4px;font-size:15px;transform:rotate(-1.5deg)}
+.red-head{color:var(--red);font-size:30px;line-height:1.1;margin:8px 0 6px}
+.red-rule{height:2px;background:var(--red);border:0;margin:6px 0 14px;opacity:.8}
+p{line-height:1.5;margin:8px 0}
+.muted{color:var(--muted)}
+hl,.hl{font-weight:900}
+.w-red{background:var(--red);color:#fff;padding:0 6px;border-radius:5px;font-weight:900}
+.w-blue{background:var(--blue);color:#fff;padding:0 6px;border-radius:5px;font-weight:900}
+.w-yellow{background:var(--yellow);color:#141414;padding:0 6px;border-radius:5px;font-weight:900}
+.w-orange{background:var(--orange);color:#fff;padding:0 6px;border-radius:5px;font-weight:900}
+.w-green{background:var(--green);color:#fff;padding:0 6px;border-radius:5px;font-weight:900}
+
+.btn{border:3px solid var(--ink);border-radius:12px;padding:12px 18px;font-weight:900;font-size:16px;background:#fff;color:var(--ink);box-shadow:0 4px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 0 0 var(--ink)}
+.btn.primary{background:var(--red);color:#fff}
+.btn.dark{background:var(--ink);color:#fff;box-shadow:0 4px 0 #555}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+
+/* ---------- NAME SCREEN ---------- */
+.hero{text-align:center;padding:10px 4px 0}
+.hero-art{position:relative;height:210px;display:flex;justify-content:center;align-items:flex-end}
+.hero-bomb{width:170px;height:170px;animation:wobble 2.4s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes wobble{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.spark{animation:spark .35s ease-in-out infinite alternate;transform-origin:center;transform-box:fill-box}
+@keyframes spark{from{transform:scale(.75) rotate(0)}to{transform:scale(1.15) rotate(25deg)}}
+.boom{position:absolute;font-family:var(--display);color:#fff;background:var(--red);padding:6px 12px;border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);font-size:18px;clip-path:polygon(0 15%,12% 0,25% 12%,40% 0,55% 10%,72% 0,85% 12%,100% 5%,92% 30%,100% 55%,90% 75%,100% 100%,78% 90%,60% 100%,45% 88%,28% 100%,15% 88%,0 100%,6% 70%,0 45%,8% 30%)}
+.boom.b1{left:6%;top:18px;transform:rotate(-12deg);animation:float 3s ease-in-out infinite}
+.boom.b2{right:6%;top:40px;transform:rotate(10deg);background:var(--yellow);color:var(--ink);animation:float 3.4s ease-in-out infinite .5s}
+@keyframes float{0%,100%{translate:0 0}50%{translate:0 -8px}}
+.title-big{font-size:46px;line-height:1;margin-top:10px}
+.title-big .b{color:var(--red)}
+.tagline{font-weight:800;color:var(--ink2);margin:8px 0 16px}
+.rack-strip{display:flex;justify-content:center;gap:5px;margin:6px 0 18px;flex-wrap:nowrap;overflow:hidden}
+.name-form{display:flex;flex-direction:column;gap:12px;max-width:420px;margin:0 auto}
+.name-form label{font-family:var(--display);font-size:20px}
+.input{width:100%;border:3px solid var(--ink);border-radius:12px;padding:14px;font-size:18px;font-weight:800;background:#fff;outline:none}
+.input:focus{box-shadow:0 0 0 4px rgba(227,52,43,.25)}
+.stats{display:flex;justify-content:center;gap:8px;margin:14px 0 4px;flex-wrap:wrap}
+.stat{background:var(--ink);color:#fff;border-radius:6px;padding:4px 10px;font-weight:900;font-size:13px}
+
+/* ---------- WIRE TILES ---------- */
+.tile{width:34px;height:92px;flex:0 0 auto;display:inline-block;transition:transform .45s cubic-bezier(.3,1.4,.5,1),opacity .3s}
+.tile svg{width:100%;height:100%;display:block}
+.tile.lift{transform:translateY(-14px)}
+.tile.cut{transform:translateY(22px) rotate(8deg);opacity:.9}
+.bob .tile{animation:bob 2.2s ease-in-out infinite}
+.bob .tile:nth-child(2n){animation-delay:.3s}.bob .tile:nth-child(3n){animation-delay:.6s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+.stand{display:flex;gap:4px;align-items:flex-end;padding:10px 10px 0;position:relative;justify-content:center;flex-wrap:nowrap}
+.stand::after{content:"";position:absolute;left:0;right:0;bottom:-10px;height:16px;background:#2a2a2c;border-radius:6px 6px 12px 12px;box-shadow:0 3px 0 #000}
+.stand-wrap{padding-bottom:46px;overflow-x:auto;overflow-y:visible}
+.tile-btn{background:none;border:0;padding:0;position:relative}
+.tile-btn:focus-visible{outline:3px solid var(--red);outline-offset:3px;border-radius:6px}
+.info-token{position:absolute;bottom:-42px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-weight:900;font-size:13px;width:26px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;z-index:2;clip-path:polygon(0 30%,50% 0,100% 30%,100% 100%,0 100%)}
+.info-token.yellow{background:var(--yellow);color:var(--ink)}
+
+/* ---------- DIAL ---------- */
+.dial{width:150px;height:150px}
+.needle{transition:transform .7s cubic-bezier(.3,1.6,.5,1);transform-origin:75px 75px}
+.dial.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-5px) rotate(-3deg)}75%{transform:translateX(5px) rotate(3deg)}}
+
+/* ---------- ONBOARDING ---------- */
+.fuse-progress{position:relative;height:14px;margin:4px 0 16px}
+.fuse-track{position:absolute;inset:5px 0;border-top:3px dashed #a67c52}
+.fuse-burnt{position:absolute;left:0;top:5px;height:3px;background:#2a2a2a;transition:width .5s}
+.fuse-spark{position:absolute;top:-4px;width:20px;height:20px;margin-left:-10px;transition:left .5s}
+.step-count{font-weight:900;font-size:13px;color:var(--muted)}
+.ob-visual{display:flex;justify-content:center;align-items:center;gap:16px;flex-wrap:wrap;margin:14px 0 6px;min-height:120px}
+.ob-nav{display:flex;gap:10px;margin-top:16px;align-items:center}
+.callout{background:#fff4c2;border:2px dashed var(--ink);border-radius:10px;padding:10px 12px;font-weight:700;margin-top:10px}
+.callout.red{background:#ffe1de}
+.callout.green{background:#dcf6e4}
+.mini-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:10px}
+.mini-card{border:2px solid var(--ink);border-radius:12px;padding:12px;background:#fff}
+.mini-card h3{font-size:18px;margin-bottom:4px}
+.mini-card.do{border-color:var(--green);background:#f1fbf4}
+.mini-card.dont{border-color:var(--red);background:#fff2f1}
+ul.clean{margin:6px 0;padding-left:20px}ul.clean li{margin:4px 0;line-height:1.4}
+table.stands{border-collapse:collapse;width:100%;max-width:360px;font-weight:800}
+table.stands th{background:var(--ink);color:#fff;font-family:var(--display);font-weight:400;padding:6px}
+table.stands td{border:2px solid var(--ink);padding:6px;text-align:center;background:#fff}
+.demo-status{min-height:48px;font-weight:800;text-align:center;margin-top:28px}
+.equip-card{width:92px;height:122px;border:3px solid var(--ink);border-radius:10px;background:linear-gradient(160deg,#ffa056,var(--orange));color:#fff;position:relative;padding:6px;font-weight:900;font-size:12px;transition:transform .5s;box-shadow:3px 3px 0 var(--ink)}
+.equip-card .num{background:var(--ink);width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center}
+.equip-card .lock{position:absolute;bottom:6px;left:6px;right:6px;background:rgba(0,0,0,.35);border-radius:6px;text-align:center;padding:3px}
+.equip-card.unlocked{transform:translateY(-10px)}
+.equip-card.unlocked .lock{background:var(--green)}
+.v-token{width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#bff5cf,var(--green));border:2px solid #217a40;display:flex;align-items:center;justify-content:center;font-weight:900}
+
+/* ---------- QUIZ ---------- */
+.q-opts{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.q-opt{text-align:left;border:2px solid var(--ink);background:#fff;border-radius:10px;padding:12px;font-weight:800}
+.q-opt.right{background:#dcf6e4;border-color:#217a40}
+.q-opt.wrong{background:#ffe1de;border-color:var(--red-d)}
+.q-feedback{margin-top:10px;font-weight:700}
+
+/* ---------- HUB / CHAT ---------- */
+.hub-head{display:flex;gap:14px;align-items:center}
+.hub-head .hero-bomb{width:84px;height:84px;flex:0 0 auto}
+.quick-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.chat{display:flex;flex-direction:column;flex:1;min-height:420px;margin-bottom:12px}
+.chat-log{flex:1;overflow-y:auto;padding:4px 2px 10px;display:flex;flex-direction:column;gap:10px;max-height:56vh;min-height:260px}
+.msg{max-width:88%;padding:10px 14px;border-radius:14px;border:2px solid var(--ink);line-height:1.45;font-weight:600;word-wrap:break-word}
+.msg.bot{background:#fff;align-self:flex-start;border-top-left-radius:4px;box-shadow:3px 3px 0 var(--ink)}
+.msg.user{background:var(--ink);color:#fff;align-self:flex-end;border-top-right-radius:4px}
+.msg ul{margin:6px 0;padding-left:20px}.msg li{margin:3px 0}
+.msg .src{display:block;margin-top:6px;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.who{display:flex;align-items:center;gap:6px;font-family:var(--display);font-size:14px;margin-bottom:2px;align-self:flex-start}
+.who svg{width:22px;height:22px}
+.chips{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;margin:6px 0 10px;padding-bottom:4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;white-space:nowrap;border:2px solid var(--ink);background:#fff;border-radius:999px;padding:6px 11px;font-weight:800;font-size:13px}
+.chip:hover{background:#fff4c2}
+.composer{display:flex;gap:8px;padding-top:4px}
+.composer .input{font-size:16px;padding:12px}
+.typing{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--muted);font-size:14px}
+.typing .fuse-line{width:70px;height:4px;background:repeating-linear-gradient(90deg,#a67c52 0 6px,transparent 6px 10px);position:relative;overflow:visible}
+.typing .fuse-line::after{content:"";position:absolute;right:-6px;top:-5px;width:12px;height:12px;border-radius:50%;background:radial-gradient(#fff6a8,#ffb400 50%,#ff5a00);animation:spark .3s infinite alternate}
+
+/* ---------- SHEET (quick rules) ---------- */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:50;align-items:flex-end;justify-content:center}
+.sheet-bg.open{display:flex}
+.sheet{background:var(--paper);width:100%;max-width:760px;max-height:88vh;overflow-y:auto;border:3px solid var(--ink);border-bottom:0;border-radius:20px 20px 0 0;padding:18px;animation:up .3s ease}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.rule-item{background:#fff;border:2px solid var(--ink);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.rule-item h3{font-size:17px;color:var(--red)}
+
+footer{text-align:center;padding:16px 8px 22px;font-size:11px;color:var(--muted);line-height:1.5}
+footer .sig{font-family:var(--display);font-size:13px;color:var(--ink2);letter-spacing:.3px}
+footer .sig span{color:var(--red)}
+
+@media (max-width:480px){
+  .chip-btn{padding:5px 9px;font-size:12px}
+  .title-big{font-size:38px}
+  .red-head{font-size:25px}
+  .panel{padding:16px;box-shadow:4px 4px 0 var(--ink)}
+  .tile{width:28px;height:78px}
+  .quick-row{grid-template-columns:1fr}
+  .brand{font-size:17px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ============ SCREEN 1: NAME ============ -->
+  <section class="screen" id="s-name" aria-label="Welcome">
+    <div class="hero">
+      <div class="hero-art">
+        <div class="boom b1">TICK</div>
+        <div class="boom b2">TOCK</div>
+        <svg class="hero-bomb" data-bomb viewBox="0 0 200 200" aria-hidden="true"></svg>
+      </div>
+      <h1 class="title-big">BOMB <span class="b">BUSTERS</span></h1>
+      <div class="display" style="font-size:20px;margin-top:4px">Squad Helper</div>
+      <p class="tagline">Learn the game in 3 minutes. Ask the rules helper anything at the table.</p>
+      <div class="rack-strip bob" id="heroRack"></div>
+    </div>
+    <div class="panel">
+      <form class="name-form" id="nameForm" autocomplete="off">
+        <label for="nameInput">What should the squad call you?</label>
+        <input class="input" id="nameInput" maxlength="24" placeholder="Your name" required>
+        <button class="btn primary" type="submit">Join the bomb squad →</button>
+        <div class="stats"><span class="stat">2 to 5 players</span><span class="stat">~30 min</span><span class="stat">Co-op</span><span class="stat">14+</span></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ ONBOARDING ============ -->
+  <section class="screen" id="s-onboard" aria-label="Onboarding">
+    <div class="topbar">
+      <div class="brand"><svg class="mini-bomb" data-bomb viewBox="0 0 200 200"></svg>Boot <b>Camp</b></div>
+      <div class="top-actions"><button class="chip-btn" data-go="hub">Skip to helper</button></div>
+    </div>
+    <div class="fuse-progress" aria-hidden="true">
+      <div class="fuse-track"></div><div class="fuse-burnt" id="fuseBurnt"></div>
+      <svg class="fuse-spark" id="fuseSpark" viewBox="0 0 20 20"><g class="spark"><path d="M10 0 L12 7 L20 10 L12 13 L10 20 L8 13 L0 10 L8 7Z" fill="#ffb400"/><circle cx="10" cy="10" r="3" fill="#fff6a8"/></g></svg>
+    </div>
+    <div class="panel" id="obCard"></div>
+  </section>
+
+  <!-- ============ QUIZ ============ -->
+  <section class="screen" id="s-quiz" aria-label="Quick check">
+    <div class="topbar">
+      <div class="brand"><svg class="mini-bomb" data-bomb viewBox="0 0 200 200"></svg>Final <b>Check</b></div>
+      <div class="top-actions"><button class="chip-btn" data-go="hub">Skip</button></div>
+    </div>
+    <div class="panel" id="quizCard"></div>
+  </section>
+
+  <!-- ============ HUB / CHAT ============ -->
+  <section class="screen" id="s-hub" aria-label="Rules helper">
+    <div class="topbar">
+      <div class="brand"><svg class="mini-bomb" data-bomb viewBox="0 0 200 200"></svg>Squad <b>Helper</b></div>
+      <div class="top-actions">
+        <button class="chip-btn" data-action="rules">Quick rules</button>
+        <button class="chip-btn" data-action="replay">Replay training</button>
+      </div>
+    </div>
+    <div class="panel chat">
+      <div class="hub-head">
+        <svg class="hero-bomb" data-bomb viewBox="0 0 200 200" aria-hidden="true"></svg>
+        <div>
+          <span class="label-tag" id="hubTag">Agent on duty</span>
+          <h2 class="red-head" id="hubTitle" style="margin-bottom:0">Ask Fuse anything</h2>
+          <div class="muted" style="font-weight:700;font-size:14px">Rules questions, mid-game doubts, edge cases. No need to ask anyone.</div>
+        </div>
+      </div>
+      <hr class="red-rule">
+      <div class="chat-log" id="chatLog" aria-live="polite"></div>
+      <div class="chips" id="chips"></div>
+      <form class="composer" id="chatForm" autocomplete="off">
+        <input class="input" id="chatInput" maxlength="500" placeholder="e.g. What if I point at a red wire?" aria-label="Your question">
+        <button class="btn primary" type="submit" id="sendBtn" aria-label="Send">Ask</button>
+      </form>
+    </div>
+  </section>
+
+  <footer>
+    <div class="sig">Play <span>Bomb-busters</span> with Sumitabh!</div>
+    Fan-made learning helper, not an official product. Bomb Busters is a game by Hisashi Hayashi, published by Cocktail Games and Pegasus Spiele. Always check your Mission card for special rules.
+  </footer>
+</div>
+
+<!-- Quick rules sheet -->
+<div class="sheet-bg" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet">
+    <div class="row" style="margin-bottom:8px">
+      <h2 class="red-head" id="sheetTitle" style="margin:0">Quick rules</h2><div class="spacer"></div>
+      <button class="chip-btn" data-action="close-sheet">Close ✕</button>
+    </div>
+    <div id="sheetBody"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn dark" data-action="replay">Replay full training</button>
+      <button class="btn" data-action="close-sheet">Back to helper</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { FAQ, QUICK_RULES } from "./rules.js";
+
+/* ---------- storage (safe) ---------- */
+const store = {
+  get(k){ try{ return localStorage.getItem("bb_"+k) }catch{ return null } },
+  set(k,v){ try{ localStorage.setItem("bb_"+k,v) }catch{} },
+  del(k){ try{ localStorage.removeItem("bb_"+k) }catch{} }
+};
+let NAME = store.get("name") || "";
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const N = () => esc(NAME || "Agent");
+
+/* ---------- art ---------- */
+let _bid=0;
+const BOMB_T = `
+  <defs><radialGradient id="BGID" cx="35%" cy="30%" r="70%"><stop offset="0" stop-color="#555"/><stop offset=".55" stop-color="#262626"/><stop offset="1" stop-color="#0d0d0d"/></radialGradient></defs>
+  <ellipse cx="100" cy="188" rx="58" ry="8" fill="rgba(0,0,0,.15)"/>
+  <circle cx="98" cy="118" r="66" fill="url(#BGID)" stroke="#141414" stroke-width="5"/>
+  <ellipse cx="74" cy="88" rx="16" ry="10" fill="rgba(255,255,255,.25)" transform="rotate(-30 74 88)"/>
+  <rect x="80" y="44" width="38" height="18" rx="4" fill="#3d3d3d" stroke="#141414" stroke-width="4"/>
+  <path d="M99 44 C100 24 118 14 136 20" stroke="#a67c52" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <g class="spark"><path d="M140 4 L145 16 L158 20 L145 25 L140 38 L135 25 L122 20 L135 16Z" fill="#ffb400" stroke="#141414" stroke-width="2.5" stroke-linejoin="round"/><circle cx="140" cy="21" r="4" fill="#fff6a8"/></g>
+  <rect x="62" y="128" width="72" height="28" rx="6" fill="#0f2a14" stroke="#141414" stroke-width="4"/>
+  <text x="98" y="149" text-anchor="middle" font-family="Lilita One, sans-serif" font-size="20" fill="#5cff8a" letter-spacing="2">00:30</text>
+  <ellipse cx="78" cy="106" rx="9" ry="11" fill="#fff"/><ellipse cx="114" cy="106" rx="9" ry="11" fill="#fff"/>
+  <circle cx="81" cy="108" r="5" fill="#141414"/><circle cx="117" cy="108" r="5" fill="#141414"/>
+  <path d="M66 92 L88 97 M128 92 L106 97" stroke="#141414" stroke-width="5" stroke-linecap="round"/>
+  <path d="M150 96 q6 10 0 14 q-6 -4 0 -14z" fill="#7fd4ff" stroke="#141414" stroke-width="2"/>`;
+const bomb = () => BOMB_T.replaceAll("BGID","bg"+(++_bid));
+document.querySelectorAll("[data-bomb]").forEach(s => s.innerHTML = bomb());
+
+const COLORS = { blue:"#2f8be0", red:"#e3342b", yellow:"#f6c21a" };
+function tileSVG(v, color="blue", faceDown=false){
+  if(faceDown){
+    return `<svg viewBox="0 0 34 92"><rect x="1.5" y="1.5" width="31" height="89" rx="6" fill="#1b1b1d" stroke="#000" stroke-width="2"/>
+      <path d="M17 6 C6 26 28 40 17 54 C8 66 26 76 17 88" stroke="#6d6d6d" stroke-width="7" fill="none"/>
+      <path d="M17 6 C6 26 28 40 17 54 C8 66 26 76 17 88" stroke="#9a9a9a" stroke-width="2" fill="none"/></svg>`;
+  }
+  const c = COLORS[color];
+  const mark = color==="red" ? `<circle cx="17" cy="56" r="6" fill="${c}" stroke="#000" stroke-width="1.5"/>` :
+               color==="yellow" ? `<rect x="11" y="50" width="12" height="12" rx="2" fill="${c}" stroke="#000" stroke-width="1.5"/>` : "";
+  const label = String(v);
+  const fs = label.length>3 ? 9 : label.length>2 ? 11 : 15;
+  return `<svg viewBox="0 0 34 92"><rect x="1.5" y="1.5" width="31" height="89" rx="6" fill="#1b1b1d" stroke="#000" stroke-width="2"/>
+    <rect x="4" y="4" width="26" height="20" rx="3" fill="#fff"/>
+    <text x="17" y="19.5" text-anchor="middle" font-family="Lilita One, sans-serif" font-size="${fs}" fill="#141414">${label}</text>
+    <path d="M17 26 C7 40 27 50 17 62 C9 72 25 80 17 88" stroke="${c}" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M15 27 C6 41 25 50 15 62" stroke="rgba(255,255,255,.55)" stroke-width="2" fill="none"/>${mark}</svg>`;
+}
+const tile = (v,c,fd,cls="") => `<span class="tile ${cls}">${tileSVG(v,c,fd)}</span>`;
+
+function dialSVG(id){
+  const cols=["#f6c21a","#9ad94a","#3fbf68","#2f8be0","#7a5be0","#f26a1f","#e3342b","#141414"];
+  let segs="";const n=cols.length;
+  for(let i=0;i<n;i++){
+    const a0=(-210+i*(240/n))*Math.PI/180, a1=(-210+(i+1)*(240/n))*Math.PI/180;
+    const r=62,cx=75,cy=75;
+    segs+=`<path d="M${cx} ${cy} L${cx+r*Math.cos(a0)} ${cy+r*Math.sin(a0)} A${r} ${r} 0 0 1 ${cx+r*Math.cos(a1)} ${cy+r*Math.sin(a1)}Z" fill="${cols[i]}" stroke="#141414" stroke-width="2"/>`;
+  }
+  return `<svg class="dial" id="${id}" viewBox="0 0 150 150" aria-hidden="true">
+    <circle cx="75" cy="75" r="70" fill="#fff" stroke="#141414" stroke-width="4"/>${segs}
+    <text x="${75+48*Math.cos(25*Math.PI/180)}" y="${75+48*Math.sin(25*Math.PI/180)+7}" text-anchor="middle" font-size="20">☠️</text>
+    <circle cx="75" cy="75" r="24" fill="#fff" stroke="#141414" stroke-width="3"/>
+    <g class="needle"><path d="M72 75 L75 22 L78 75Z" fill="#141414"/><circle cx="75" cy="75" r="7" fill="#141414"/></g></svg>`;
+}
+function setDial(id, step){ // step 0..7
+  const el=document.getElementById(id); if(!el) return;
+  const angle = -210 + (step+0.5)*(240/8) + 90;
+  el.querySelector(".needle").style.transform=`rotate(${angle}deg)`;
+  el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake");
+}
+
+/* hero rack */
+const heroTiles=[[1,"blue"],[2.1,"yellow"],[3,"blue"],[4,"blue"],[5.5,"red"],[7,"blue"],[8,"blue"],[9,"blue"],[11,"blue"],[12,"blue"]];
+document.getElementById("heroRack").innerHTML = heroTiles.map(([v,c])=>tile(v,c)).join("");
+
+/* ---------- navigation ---------- */
+const screens = { name:"s-name", onboard:"s-onboard", quiz:"s-quiz", hub:"s-hub" };
+function go(name){
+  Object.values(screens).forEach(id=>document.getElementById(id).classList.remove("active"));
+  document.getElementById(screens[name]).classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+  if(name==="hub") enterHub();
+}
+document.addEventListener("click", e=>{
+  const g=e.target.closest("[data-go]"); if(g){ if(g.dataset.go==="hub") store.set("onboarded","1"); go(g.dataset.go); }
+  const a=e.target.closest("[data-action]"); if(!a) return;
+  const act=a.dataset.action;
+  if(act==="rules") openSheet();
+  if(act==="close-sheet") closeSheet();
+  if(act==="replay"){ closeSheet(); step=0; renderStep(); go("onboard"); }
+  if(act==="rename"){ e.preventDefault(); store.del("name"); NAME=""; go("name"); setTimeout(()=>document.getElementById("nameInput").focus(),100); }
+});
+
+/* ---------- name ---------- */
+document.getElementById("nameForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  const v=document.getElementById("nameInput").value.trim().replace(/\s+/g," ").slice(0,24);
+  if(!v) return;
+  NAME = v.charAt(0).toUpperCase()+v.slice(1);
+  store.set("name", NAME);
+  step=0; renderStep(); go("onboard");
+});
+
+/* ---------- onboarding steps ---------- */
+let step=0;
+const STEPS = [
+  { tag:"Briefing", title:()=>`Welcome to the squad, ${N()}!`, body:()=>`
+    <p>Bomb Busters is a <b>team game</b>. You and your friends are bomb disposal experts working on <b>one bomb together</b>. Everyone wins or everyone goes boom.</p>
+    <div class="ob-visual"><svg class="hero-bomb" data-bomb viewBox="0 0 200 200" style="width:120px;height:120px">${bomb()}</svg>${dialSVG("d0")}</div>
+    <div class="callout red">The bomb explodes if someone cuts a <span class="w-red">RED</span> wire, or if the <b>detonator dial</b> reaches the ☠️.</div>
+    <p class="muted" style="font-weight:700">Your job, ${N()}: cut every wire without either of those happening. Let's train.</p>`,
+    after:()=>setDial("d0",1) },
+
+  { tag:"Your wires", title:()=>`Meet your wires, ${N()}`, body:()=>`
+    <p>Every player gets wire tiles on a stand facing them. Nobody else can see your numbers.</p>
+    <ul class="clean">
+      <li><span class="w-blue">BLUE</span> wires are numbered <b>1 to 12</b>, with <b>4 copies</b> of each.</li>
+      <li><span class="w-red">RED</span> wires: cut one and it's game over.</li>
+      <li><span class="w-yellow">YELLOW</span> wires: safe to cut, and they all count as the same value, "yellow".</li>
+    </ul>
+    <div class="stand-wrap"><div class="stand" id="sortStand"></div></div>
+    <div class="row" style="justify-content:center;margin-top:8px"><button class="btn" id="sortBtn">Sort my stand</button></div>
+    <div class="callout">Always sort low to high. The decimals on red and yellow wires (like <b>5.5</b>) are <b>only for sorting</b>. In play they're just "red" or "yellow".</div>`,
+    after:()=>{
+      const unsorted=[[9,"blue"],[2.1,"yellow"],[12,"blue"],[4,"blue"],[5.5,"red"],[1,"blue"],[7,"blue"],[4,"blue"]];
+      const st=document.getElementById("sortStand");
+      st.innerHTML=unsorted.map(([v,c])=>tile(v,c)).join("");
+      document.getElementById("sortBtn").onclick=()=>{
+        const sorted=[...unsorted].sort((a,b)=>a[0]-b[0]);
+        st.querySelectorAll(".tile").forEach(t=>t.classList.add("lift"));
+        setTimeout(()=>{ st.innerHTML=sorted.map(([v,c])=>tile(v,c,false,"lift")).join("");
+          requestAnimationFrame(()=>st.querySelectorAll(".tile").forEach(t=>t.classList.remove("lift"))); },300);
+        document.getElementById("sortBtn").textContent="Sorted ✓";
+      };
+    } },
+
+  { tag:"Setup", title:()=>`Setting up the table`, body:()=>`
+    <ol class="clean" style="padding-left:20px">
+      <li>Pick a <b>Mission card</b>. Start with mission 1 and play in order.</li>
+      <li>Choose a <b>Captain</b> (random first, then it passes left each mission). The Captain reads the mission aloud, then flips it to show its <b>special rules</b>.</li>
+      <li>Shuffle the wires the mission asks for, deal them all, and everyone <b>sorts their stand</b>.</li>
+      <li>Lay out one <span class="w-orange">Equipment</span> card per player (locked for now) and set the dial for your player count.</li>
+      <li>Starting with the Captain, everyone places <b>1 Info token</b> showing the value of one of their <span class="w-blue">blue</span> wires.</li>
+    </ol>
+    <table class="stands" style="margin-top:8px"><tr><th>Players</th><th>Captain</th><th>Others</th></tr>
+      <tr><td>2</td><td>2 stands</td><td>2 stands</td></tr><tr><td>3</td><td>2 stands</td><td>1 stand</td></tr><tr><td>4 to 5</td><td>1 stand</td><td>1 stand</td></tr></table>
+    <div class="callout">Got 2 stands, ${N()}? Sort each one separately, but they count as <b>one hand</b>.</div>`},
+
+  { tag:"Your move", title:()=>`Try a Dual Cut, ${N()}`, body:()=>`
+    <p>On your turn you do <b>one action</b>. The main one is the <b>Dual Cut</b>: point at a teammate's wire and say its number. You must have that number too.</p>
+    <p style="font-weight:800">You hold a <span class="w-blue">7</span>. Alex's stand is below and you can only see the backs. Their Info token shows one wire is a 4. <u>Tap the wire you think is a 7.</u></p>
+    <div class="row" style="justify-content:center;gap:24px;align-items:flex-end">
+      <div><div class="muted" style="font-weight:900;font-size:12px;text-align:center">ALEX'S STAND</div>
+        <div class="stand-wrap"><div class="stand" id="dcStand"></div></div></div>
+      <div style="text-align:center"><div class="muted" style="font-weight:900;font-size:12px">DIAL</div>${dialSVG("d3")}</div>
+    </div>
+    <div class="demo-status" id="dcStatus">Hint: stands are sorted low to high, so think about where a 7 would sit.</div>
+    <div class="callout green">Right guess: both 7s are cut and placed face up. Wrong guess: the dial moves 1, and the real number is shown with an Info token.</div>`,
+    after:()=>{
+      setDial("d3",1); let dial=1;
+      const vals=[2,4,5,7,9,11];
+      const st=document.getElementById("dcStand"); const status=document.getElementById("dcStatus");
+      st.innerHTML=vals.map((v,i)=>`<button class="tile-btn" data-i="${i}" aria-label="Wire ${i+1}">${tile(v,"blue",true)}${i===1?'<span class="info-token">4</span>':""}</button>`).join("");
+      st.onclick=e=>{
+        const b=e.target.closest(".tile-btn"); if(!b||b.disabled) return;
+        const i=+b.dataset.i, v=vals[i];
+        if(v===7){
+          b.innerHTML=tile(7,"blue",false,"cut"); b.disabled=true;
+          status.innerHTML=`✅ <b>Nice cut, ${N()}!</b> Alex reveals the 7, and you cut one of your 7s too.`;
+          st.querySelectorAll(".tile-btn").forEach(x=>x.disabled=true);
+        } else if(i===1){ status.innerHTML=`That one already shows a <b>4</b>. Pick another.`; }
+        else {
+          dial=Math.min(dial+1,7); setDial("d3",dial);
+          b.insertAdjacentHTML("beforeend",`<span class="info-token">${v}</span>`); b.disabled=true;
+          status.innerHTML=`❌ That was a <b>${v}</b>. The dial ticks forward and Alex places an Info token. Try again!`;
+        }
+      };
+    }},
+
+  { tag:"Other moves", title:()=>`Two more moves`, body:()=>`
+    <div class="mini-grid">
+      <div class="mini-card"><h3>✂️ Solo Cut</h3><p>If <b>all</b> remaining wires of a number are in your hand, cut them yourself: all 4 at once, or the last 2 if a pair is already gone.</p>
+        <div class="stand" style="padding-top:4px">${tile(9,"blue")}${tile(9,"blue")}${tile(9,"blue")}${tile(9,"blue")}</div><div style="height:16px"></div></div>
+      <div class="mini-card"><h3>🟥 Reveal your reds</h3><p>Only allowed if <b>every</b> wire you have left is red. Lay them all face up. Safe and done.</p>
+        <div class="stand" style="padding-top:4px">${tile(3.5,"red")}${tile(8.5,"red")}</div><div style="height:16px"></div></div>
+    </div>
+    <div class="callout">If your stand is empty, you're out of wires. Your turn gets skipped and the squad carries on.</div>`},
+
+  { tag:"Danger", title:()=>`When a cut goes wrong`, body:()=>`
+    <div class="ob-visual">${dialSVG("d5")}<div style="max-width:300px">
+      <p>Point at a <span class="w-red">RED</span> wire and it's <b>BOOM</b>, mission over.</p>
+      <p>Point at a wrong <span class="w-blue">blue</span> or <span class="w-yellow">yellow</span> wire and the <b>dial moves 1 space</b>. Your teammate shows the real value with an Info token.</p>
+      <button class="btn" id="missBtn">Miss a cut</button></div></div>
+    <div class="demo-status" id="missStatus" style="margin-top:6px"></div>
+    <div class="callout">You never show where <b>your</b> matching wire was. Keep your hand secret.</div>`,
+    after:()=>{ let d=2; setDial("d5",d);
+      document.getElementById("missBtn").onclick=()=>{ d++; setDial("d5",Math.min(d,7));
+        const s=document.getElementById("missStatus");
+        if(d>=7){ s.innerHTML=`💥 <b>BOOM.</b> The dial hit the skull. Change Captain and restart the mission.`; d=2; setTimeout(()=>setDial("d5",2),1600);}
+        else s.textContent=`Dial moved. ${7-d} more miss${7-d===1?"":"es"} and it's over.`; };
+    }},
+
+  { tag:"Gadgets", title:()=>`Your gadgets, ${N()}`, body:()=>`
+    <div class="mini-grid">
+      <div class="mini-card"><h3>Equipment</h3><p>Each card unlocks the first time <b>2 wires</b> of its number are cut. One use only, then flip it. Most can be used by anyone, any time.</p>
+        <div class="row" style="justify-content:center"><div class="equip-card" id="eqCard"><div class="num">9</div><div style="margin-top:8px">Mystery gadget</div><div class="lock" id="eqLock">🔒 locked</div></div></div>
+        <div class="row" style="justify-content:center;margin-top:10px"><button class="btn" id="eqBtn">Cut two 9s</button></div></div>
+      <div class="mini-card"><h3>Double Detector</h3><p>On your Character card, <b>once per mission</b>. In a Dual Cut, name one number and point at <b>2 wires on the SAME teammate's stand</b>. If either matches, it works.</p>
+        <p class="muted" style="font-weight:700">If neither matches and one is red, there's no boom. Your teammate just marks the wire that isn't red.</p></div>
+      <div class="mini-card"><h3>Validation tokens</h3><div class="row"><div class="v-token">9</div><p style="margin:0">When all <b>4</b> wires of a number are cut, put a green token on it. Nobody asks for it again.</p></div></div>
+    </div>`,
+    after:()=>{ document.getElementById("eqBtn").onclick=e=>{ document.getElementById("eqCard").classList.add("unlocked"); document.getElementById("eqLock").textContent="✓ ready"; e.target.disabled=true; e.target.textContent="Unlocked!"; }; }},
+
+  { tag:"Shhh", title:()=>`The silence rule`, body:()=>`
+    <p>This is what makes Bomb Busters special. Talking is <b>very limited</b>, so you read the table instead.</p>
+    <div class="mini-grid">
+      <div class="mini-card dont"><h3>🚫 Not allowed</h3><ul class="clean"><li>Talking about your wires</li><li>Hinting at values</li><li>Recalling what happened earlier</li><li>Saying your guesses out loud</li></ul></div>
+      <div class="mini-card do"><h3>✅ Allowed</h3><ul class="clean"><li>General tactics</li><li>How equipment works</li><li>Reminding special rules</li><li>"Hey, use your Double Detector!"</li></ul></div>
+    </div>
+    <div class="callout">Poker face on, ${N()}. 😎</div>`},
+
+  { tag:"Mission plan", title:()=>`Win, lose, level up`, body:()=>`
+    <div class="mini-grid">
+      <div class="mini-card do"><h3>🏆 Win</h3><p>Every player's stand is empty.</p></div>
+      <div class="mini-card dont"><h3>💥 Lose</h3><p>A red wire is cut, or the dial hits ☠️. Change Captain and try again.</p></div>
+    </div>
+    <p style="margin-top:12px"><b>Missions 1 to 8</b> are training: 1 to 3 Novice, 4 to 7 Intermediate, 8 is the final exam. Pass it and you unlock the first <b>Surprise box</b> (missions 9 to 19).</p>
+    <div class="callout">Each Mission card has special rules on the back. <b>They always beat the general rules.</b></div>
+    <p style="font-weight:800">Training done, ${N()}. Take a 60-second check, or go straight to the helper.</p>`,
+    last:true },
+];
+
+function renderStep(){
+  const s=STEPS[step]; const card=document.getElementById("obCard");
+  card.innerHTML=`<div class="row"><span class="label-tag">${s.tag}</span><div class="spacer"></div><span class="step-count">${step+1} / ${STEPS.length}</span></div>
+    <h2 class="red-head">${s.title()}</h2><hr class="red-rule">${s.body()}
+    <div class="ob-nav">${step>0?'<button class="btn" id="obBack">← Back</button>':""}<div class="spacer"></div>
+    ${s.last?'<button class="btn" data-go="hub">Go to helper</button><button class="btn primary" id="obQuiz">Take the check</button>':'<button class="btn primary" id="obNext">Next →</button>'}</div>`;
+  card.querySelectorAll("[data-bomb]").forEach(x=>x.innerHTML=bomb());
+  const pct=(step)/(STEPS.length-1)*100;
+  document.getElementById("fuseBurnt").style.width=pct+"%";
+  document.getElementById("fuseSpark").style.left=pct+"%";
+  const nb=document.getElementById("obNext"); if(nb) nb.onclick=()=>{ step++; renderStep(); window.scrollTo({top:0,behavior:"smooth"}); };
+  const bb=document.getElementById("obBack"); if(bb) bb.onclick=()=>{ step--; renderStep(); };
+  const qb=document.getElementById("obQuiz"); if(qb) qb.onclick=()=>{ qi=0; score=0; renderQuiz(); go("quiz"); };
+  if(s.after) requestAnimationFrame(()=>s.after());
+}
+
+/* ---------- quiz ---------- */
+const QUIZ=[
+  {q:"You point at a teammate's wire, say \"8\", and it's actually a blue 6. What happens?",o:["The bomb explodes","The dial moves 1 and an Info token shows it's a 6","Nothing, try again next turn"],a:1,e:"Wrong blue or yellow guess: dial +1, and the teammate shows the real value with an Info token."},
+  {q:"What does the 5.5 on a red wire mean?",o:["It's worth 5.5 points","It's only for sorting your stand","You can cut it with a 5"],a:1,e:"Decimals are only for sorting. In play it's just a red wire."},
+  {q:"With the Double Detector, which 2 wires can you point at?",o:["One wire each from two teammates","Two wires on the same teammate's stand","Any two wires on the table"],a:1,e:"Both wires must be on the same teammate's stand."},
+  {q:"Which of these is allowed to say out loud?",o:["\"I think Sam's third wire is a 9\"","\"Remember, the Stabilizer is unlocked\"","\"Last turn Priya had a 4 there\""],a:1,e:"Reminding about equipment is fine. Guesses and recalling past info are not."},
+  {q:"When can you do a Solo Cut on the 10s?",o:["When you hold at least two 10s","When all remaining 10s in the game are in your hand","Any time it's your turn"],a:1,e:"Solo Cut only works if every remaining wire of that value is in your hand."},
+];
+let qi=0, score=0;
+function renderQuiz(){
+  const card=document.getElementById("quizCard");
+  if(qi>=QUIZ.length){
+    const great=score>=4;
+    card.innerHTML=`<span class="label-tag">Result</span><h2 class="red-head">${great?`Bomb squad ready, ${N()}! 🏆`:`Good start, ${N()}!`}</h2><hr class="red-rule">
+      <p style="font-size:20px;font-weight:900">${score} / ${QUIZ.length} correct</p>
+      <p>${great?"You know the core rules. Fuse is on standby for anything tricky at the table.":"No stress. Replay training any time, or just ask Fuse when a question comes up mid-game."}</p>
+      <div class="ob-nav"><button class="btn" data-action="replay">Replay training</button><div class="spacer"></div><button class="btn primary" data-go="hub">Open the helper →</button></div>`;
+    store.set("onboarded","1"); return;
+  }
+  const Q=QUIZ[qi];
+  card.innerHTML=`<div class="row"><span class="label-tag">Question ${qi+1} of ${QUIZ.length}</span><div class="spacer"></div><span class="step-count">Score ${score}</span></div>
+    <h2 class="red-head" style="font-size:24px">${Q.q}</h2><hr class="red-rule">
+    <div class="q-opts">${Q.o.map((o,i)=>`<button class="q-opt" data-i="${i}">${o}</button>`).join("")}</div>
+    <div class="q-feedback" id="qfb"></div><div class="ob-nav"><div class="spacer"></div><button class="btn primary" id="qNext" style="display:none">Next →</button></div>`;
+  card.querySelector(".q-opts").onclick=e=>{
+    const b=e.target.closest(".q-opt"); if(!b||card.dataset.done==="1") return;
+    card.dataset.done="1"; const i=+b.dataset.i;
+    card.querySelectorAll(".q-opt").forEach((x,j)=>{ if(j===Q.a) x.classList.add("right"); });
+    if(i===Q.a){ score++; document.getElementById("qfb").innerHTML=`✅ Spot on. ${Q.e}`; }
+    else { b.classList.add("wrong"); document.getElementById("qfb").innerHTML=`❌ Not quite. ${Q.e}`; }
+    const n=document.getElementById("qNext"); n.style.display=""; n.onclick=()=>{ qi++; card.dataset.done=""; renderQuiz(); };
+  };
+}
+
+/* ---------- quick rules sheet ---------- */
+const md = s => {
+  let h=esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");
+  const lines=h.split("\n"); let out="",inList=false,ol=false;
+  for(const ln of lines){
+    const m=ln.match(/^\s*[-*•]\s+(.*)/), n=ln.match(/^\s*\d+[.)]\s+(.*)/);
+    if(m||n){ const want=n?"ol":"ul"; if(!inList){ out+=`<${want}>`; inList=true; ol=!!n; } out+=`<li>${(m||n)[1]}</li>`; }
+    else { if(inList){ out+= ol?"</ol>":"</ul>"; inList=false; } if(ln.trim()) out+=`<div>${ln}</div>`; }
+  }
+  if(inList) out+= ol?"</ol>":"</ul>";
+  return out;
+};
+function openSheet(){
+  document.getElementById("sheetBody").innerHTML=QUICK_RULES.map(r=>`<div class="rule-item"><h3>${esc(r.t)}</h3><div>${md(r.b)}</div></div>`).join("");
+  document.getElementById("sheet").classList.add("open");
+}
+function closeSheet(){ document.getElementById("sheet").classList.remove("open"); }
+document.getElementById("sheet").addEventListener("click",e=>{ if(e.target.id==="sheet") closeSheet(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeSheet(); });
+
+/* ---------- chat ---------- */
+const log=document.getElementById("chatLog");
+const history=[]; let hubStarted=false; let aiMode="unknown"; // unknown | live | offline
+const MINI = () => `<svg viewBox="0 0 200 200">${bomb()}</svg>`;
+const SUGGEST=["What if I guess wrong?","How does the Double Detector work?","Can I say my guess out loud?","When does equipment unlock?","How do yellow wires work?","When can I Solo Cut?"];
+
+function addMsg(role,text,src){
+  if(role==="bot") log.insertAdjacentHTML("beforeend",`<div class="who">${MINI()}Fuse</div>`);
+  const d=document.createElement("div"); d.className="msg "+role;
+  d.innerHTML = role==="bot" ? md(text)+(src?`<span class="src">${src}</span>`:"") : esc(text);
+  log.appendChild(d); log.scrollTop=log.scrollHeight; return d;
+}
+function enterHub(){
+  document.getElementById("hubTitle").textContent=`Ask Fuse anything, ${NAME||"Agent"}`;
+  if(hubStarted) return; hubStarted=true;
+  addMsg("bot",`Hey **${NAME||"Agent"}**! I'm **Fuse**, your rules helper. Ask me anything about Bomb Busters, like a rule you're unsure of or a weird situation at the table. I'll answer from the rulebook.`);
+  document.getElementById("chips").innerHTML=SUGGEST.map(s=>`<button class="chip" type="button">${s}</button>`).join("");
+}
+document.getElementById("chips").addEventListener("click",e=>{ const c=e.target.closest(".chip"); if(c) ask(c.textContent); });
+document.getElementById("chatForm").addEventListener("submit",e=>{ e.preventDefault(); const i=document.getElementById("chatInput"); const v=i.value.trim(); if(v){ i.value=""; ask(v);} });
+
+function offlineAnswer(q){
+  const t=" "+q.toLowerCase().replace(/[^a-z0-9.? ]/g," ")+" ";
+  let best=null,bs=0;
+  for(const f of FAQ){ let s=0; for(const k of f.k){ if(t.includes(k)) s+= k.split(" ").length*2 + (k.length>6?1:0); } if(s>bs){bs=s;best=f;} }
+  return best ? best.a : `I couldn't match that to a rule in quick mode. Try rephrasing with a keyword like **dual cut**, **yellow**, **equipment** or **dial**, or open **Quick rules** at the top.`;
+}
+
+let busy=false;
+async function ask(q){
+  if(busy) return; busy=true; document.getElementById("sendBtn").disabled=true;
+  addMsg("user",q); history.push({role:"user",text:q});
+  const typing=document.createElement("div"); typing.className="typing"; typing.innerHTML=`<span class="fuse-line"></span> Fuse is checking the rulebook...`;
+  log.appendChild(typing); log.scrollTop=log.scrollHeight;
+  let text=null, src="";
+  if(aiMode!=="offline"){
+    try{
+      const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),25000);
+      const r=await fetch("/api/ask",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name:NAME,messages:history.slice(-8)}),signal:ctrl.signal});
+      clearTimeout(to);
+      if(r.ok){ const d=await r.json(); text=d.text; aiMode="live"; }
+      else if(r.status===429){ text=`Whoa, lots of questions right now. Here's the quick answer while the AI cools down:\n\n`+offlineAnswer(q); src="Quick answer from the rules summary"; }
+      else if(r.status===404||r.status===405||r.status===503){ aiMode="offline"; }
+    }catch(e){ /* network: fall back once */ }
+  }
+  if(!text){ text=offlineAnswer(q); src="Quick answer from the rules summary"; }
+  typing.remove(); addMsg("bot",text,src); history.push({role:"bot",text});
+  busy=false; document.getElementById("sendBtn").disabled=false;
+}
+
+/* ---------- boot ---------- */
+if(NAME){
+  document.getElementById("nameInput").value=NAME;
+  if(store.get("onboarded")==="1"){
+    go("hub");
+    document.getElementById("hubTag").innerHTML=`Welcome back · <a href="#" data-action="rename" style="color:#fff">not ${esc(NAME)}?</a>`;
+  } else { go("name"); }
+} else go("name");
+</script>
+</body>
+</html>
